@@ -1,0 +1,80 @@
+def check_read_in_list(reads_list, pref, suf):      #проверка наличия преффикса/суффикса в массиве ридов
+    check = [-1] * 2
+    if pref in reads_list:
+        check[0] = reads_list.index(pref)
+    if suf in reads_list:
+        check[1] = reads_list.index(suf)
+    return check
+
+def matrix_expand(matrix):                          #расширение матрицы смежности
+    if matrix == [[]]:                  #пустая матрица, еще ни одного рида не добавлено
+        matrix = [[0]]
+        return matrix, 1
+    else:
+        if  matrix == [[0]]:            #добавлен 1 рид
+            size = 1
+        else:
+            size = len(matrix[0])
+        for i in range(size):
+            matrix[i].append(0)
+        matrix.append([0] * (size + 1))
+        size += 1
+        return matrix, size
+
+def bypass(matrix, count_edges_total, count_edges, i_start, flag):    # 2 счётчика рёбер: 1й образец, а 2й изменяемый, рабочий; matrix - локальная переменная, исходная матрица не меняется
+    global flag_bypass
+    size = len(matrix[0])
+    #count_ways = 0                      #количество путей из конкретной вершины i_start
+    if count_edges != 0:
+        for j in range(size):               #добавить yield?
+            if matrix[i_start][j] > 0:      #поиск возможного пути из вершины; если такого пути нет, а рёбра пройдены не все, то идем назад, до последней развилки - ищем for, где >1 не нуля; на последней развилке идём по другому пути
+                matrix[i_start][j] -= 1
+                if flag_bypass:             #изменение массива и дальнейший проход по другим путям на развилках только если флаг разрешает
+                    final_list.append(j)
+                    bypass(matrix, count_edges_total, count_edges - 1, j, flag_bypass)       #прохождение вершины; при обратном ходе, если несколько путей, идет по следующему(выполянет for)
+    else:
+        flag_bypass = False
+#    return final_list .pop(len(final_list) - 1)
+#       return bypass(matrix, count_edges_total, count_edges_total, final_list[1])      #если после прохода остались ребра, то сдвинуть начало пути
+
+
+print("Введите количество паттернов")
+N = int(input())                #количество паттернов
+overlap = 2                     #величина перекрытия
+length = 0
+reads_list = []
+matrix = [[]]
+count_edges = N                 #количество вершин, оно же количество паттернов. Это число в процессе прохода будет уменьшаться
+final_list = []                 #yield?     №глобальная переменная, собирает путь при обходе
+print("Введите паттерны")
+
+for i in range(N):                  #считывание к-меров, парное чтение и создание графа де Брёйна
+    pattern = input()
+    length = len(pattern)
+    pref = pattern[0:overlap]
+    suf = pattern[length - overlap:length]
+    check = check_read_in_list(reads_list, pref, suf)
+    if check[0] >=0 and check[1] >= 0:                   #оба рида уже есть в списке
+        matrix[check[0]][check[1]] += 1
+    elif check[0] >= 0:                              #есть только префикс
+        reads_list.append(suf)
+        matrix, size = matrix_expand(matrix)
+        matrix[check[0]][size - 1] = 1
+    elif check[1] >= 0:                              #есть только суффикс
+        reads_list.append(pref)
+        matrix, size = matrix_expand(matrix)
+        matrix[size - 1][check[1]] = 1
+    else:                                       #ни того, ни другого нет
+        reads_list.append(pref)
+        reads_list.append(suf)
+        matrix, size = matrix_expand(matrix)
+        matrix, size = matrix_expand(matrix)
+        matrix[size - 2][size - 1] = 1
+
+flag_bypass = True          #флаг для обхода; когда прошли все рёбра, то меняем флаг и фиксируем т.о. массив вершин пути
+bypass(matrix, )
+
+#for i in range(size):
+#    print(' '.join(map(str, matrix[i])))
+
+#print(reads_list)
